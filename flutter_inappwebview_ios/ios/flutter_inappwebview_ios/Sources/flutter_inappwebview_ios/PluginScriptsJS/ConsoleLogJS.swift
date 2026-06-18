@@ -32,9 +32,19 @@ public class ConsoleLogJS {
         
             function _callHandler(logLevel, args) {
                 var message = '';
+                function _stringify(v) {
+                    try {
+                        if (v instanceof Error) return v.name + ': ' + v.message + (v.stack ? '\\n' + v.stack : '');
+                        if (v !== null && typeof v === 'object') {
+                            var s = JSON.stringify(v);
+                            if (typeof s === 'string') return s.length > 2000 ? s.slice(0, 2000) + '...(truncated)' : s;
+                        }
+                    } catch(_) {}
+                    return String(v);
+                }
                 for (var i in args) {
                     try {
-                        message += message === '' ? args[i] : ' ' + args[i];
+                        message += (message === '' ? '' : ' ') + _stringify(args[i]);
                     } catch(_) {}
                 }
                 try {
