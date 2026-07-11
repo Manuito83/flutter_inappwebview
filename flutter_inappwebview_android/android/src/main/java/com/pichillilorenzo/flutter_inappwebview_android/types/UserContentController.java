@@ -2,6 +2,7 @@ package com.pichillilorenzo.flutter_inappwebview_android.types;
 
 import android.annotation.SuppressLint;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -210,12 +211,25 @@ public class UserContentController implements Disposable {
       }
       source = wrapSourceCodeAddChecks(source, userOnlyScript);
 
-      ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
-              webView,
-              wrapSourceCodeInContentWorld(userOnlyScript.getContentWorld(), source),
-              userOnlyScript.getAllowedOriginRules()
-      );
-      this.scriptHandlerMap.put(userOnlyScript, scriptHandler);
+      // Only register once: a value-equal key already present would orphan its previous ScriptHandler
+      // (unremovable, keeps injecting on every load until the WebView is destroyed)
+      if (!this.scriptHandlerMap.containsKey(userOnlyScript)) {
+        try {
+          ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                  webView,
+                  wrapSourceCodeInContentWorld(userOnlyScript.getContentWorld(), source),
+                  userOnlyScript.getAllowedOriginRules()
+          );
+          this.scriptHandlerMap.put(userOnlyScript, scriptHandler);
+        } catch (RuntimeException e) {
+          // Chromium throws "Must be started before we block!" when this runs before the browser
+          // process finished starting (first webview of a cold process). Failing the whole platform-view
+          // create here is what leaves the webview blank (#2843): skip instead. Not putting the script
+          // in scriptHandlerMap means a later re-add retries the native registration.
+          Log.e(LOG_TAG, "addDocumentStartJavaScript failed for " + userOnlyScript.getGroupName()
+                  + " (browser process not started yet?): " + e);
+        }
+      }
     }
     return this.userOnlyScripts.get(userOnlyScript.getInjectionTime()).add(userOnlyScript);
   }
@@ -306,13 +320,21 @@ public class UserContentController implements Disposable {
       webView.post(new Runnable() {
         @Override
         public void run() {
-          if (webView != null) {
-            ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
-                    webView,
-                    finalSource,
-                    pluginScript.getAllowedOriginRules()
-            );
-            scriptHandlerMap.put(pluginScript, scriptHandler);
+          // Only register once: a value-equal key already present would orphan its previous ScriptHandler
+          if (webView != null && !scriptHandlerMap.containsKey(pluginScript)) {
+            try {
+              ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                      webView,
+                      finalSource,
+                      pluginScript.getAllowedOriginRules()
+              );
+              scriptHandlerMap.put(pluginScript, scriptHandler);
+            } catch (RuntimeException e) {
+              // "Must be started before we block!" before browser startup completes. An uncaught throw
+              // here would kill the main thread (we are inside a posted runnable): log and skip instead.
+              Log.e(LOG_TAG, "addDocumentStartJavaScript failed for plugin script "
+                      + pluginScript.getGroupName() + ": " + e);
+            }
           }
         }
       });
