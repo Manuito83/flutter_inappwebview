@@ -210,12 +210,17 @@ public class UserContentController implements Disposable {
       }
       source = wrapSourceCodeAddChecks(source, userOnlyScript);
 
-      ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
-              webView,
-              wrapSourceCodeInContentWorld(userOnlyScript.getContentWorld(), source),
-              userOnlyScript.getAllowedOriginRules()
-      );
-      this.scriptHandlerMap.put(userOnlyScript, scriptHandler);
+      // Only register once: putting a value-equal key would orphan the previous ScriptHandler,
+      // which keeps injecting on every load and survives removeUserOnlyScript(s)/removeAll
+      // (only destroying the WebView clears it), duplicating script executions
+      if (!this.scriptHandlerMap.containsKey(userOnlyScript)) {
+        ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                webView,
+                wrapSourceCodeInContentWorld(userOnlyScript.getContentWorld(), source),
+                userOnlyScript.getAllowedOriginRules()
+        );
+        this.scriptHandlerMap.put(userOnlyScript, scriptHandler);
+      }
     }
     return this.userOnlyScripts.get(userOnlyScript.getInjectionTime()).add(userOnlyScript);
   }
@@ -292,12 +297,16 @@ public class UserContentController implements Disposable {
       }
       source = wrapSourceCodeAddChecks(source, pluginScript);
 
-      ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
-              webView,
-              wrapSourceCodeInContentWorld(pluginScript.getContentWorld(), source),
-              pluginScript.getAllowedOriginRules()
-      );
-      this.scriptHandlerMap.put(pluginScript, scriptHandler);
+      // Only register once: putting a value-equal key would orphan the previous ScriptHandler
+      // (see addUserOnlyScript)
+      if (!this.scriptHandlerMap.containsKey(pluginScript)) {
+        ScriptHandler scriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                webView,
+                wrapSourceCodeInContentWorld(pluginScript.getContentWorld(), source),
+                pluginScript.getAllowedOriginRules()
+        );
+        this.scriptHandlerMap.put(pluginScript, scriptHandler);
+      }
     }
     return this.pluginScripts.get(pluginScript.getInjectionTime()).add(pluginScript);
   }
