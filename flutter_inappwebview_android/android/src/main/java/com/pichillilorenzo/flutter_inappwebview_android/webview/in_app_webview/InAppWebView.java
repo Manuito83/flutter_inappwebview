@@ -53,6 +53,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebHistoryItem;
 import android.webkit.WebSettings;
 import android.webkit.WebStorage;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.HorizontalScrollView;
@@ -2203,8 +2204,28 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
     }
     setWebChromeClient(new WebChromeClient());
     setWebViewClient(new WebViewClient() {
+      private boolean destroyed = false;
+
+      @Override
       public void onPageFinished(WebView view, String url) {
-        destroy();
+        if (!destroyed) {
+          destroyed = true;
+          destroy();
+        }
+      }
+
+      @RequiresApi(api = Build.VERSION_CODES.O)
+      @Override
+      public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+        if (!destroyed) {
+          destroyed = true;
+          ViewParent parent = view.getParent();
+          if (parent instanceof ViewGroup) {
+            ((ViewGroup) parent).removeView(view);
+          }
+          view.destroy();
+        }
+        return true;
       }
     });
     interceptOnlyAsyncAjaxRequestsPluginScript = null;
