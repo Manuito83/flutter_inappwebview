@@ -104,6 +104,7 @@ public class InAppWebViewSettings implements ISettings<InAppWebViewInterface> {
   public Integer initialScale = 0;
   public Boolean needInitialFocus = true;
   public Boolean offscreenPreRaster = false;
+  public Boolean loadWhenHidden = false;
   public String sansSerifFontFamily = "sans-serif";
   public String serifFontFamily = "sans-serif";
   public String standardFontFamily = "sans-serif";
@@ -357,6 +358,9 @@ public class InAppWebViewSettings implements ISettings<InAppWebViewInterface> {
         case "offscreenPreRaster":
           offscreenPreRaster = (Boolean) value;
           break;
+        case "loadWhenHidden":
+          loadWhenHidden = (Boolean) value;
+          break;
         case "sansSerifFontFamily":
           sansSerifFontFamily = (String) value;
           break;
@@ -554,6 +558,7 @@ public class InAppWebViewSettings implements ISettings<InAppWebViewInterface> {
     settings.put("initialScale", initialScale);
     settings.put("needInitialFocus", needInitialFocus);
     settings.put("offscreenPreRaster", offscreenPreRaster);
+    settings.put("loadWhenHidden", loadWhenHidden);
     settings.put("sansSerifFontFamily", sansSerifFontFamily);
     settings.put("serifFontFamily", serifFontFamily);
     settings.put("standardFontFamily", standardFontFamily);

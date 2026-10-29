@@ -1,5 +1,6 @@
 ## 1.2.0-beta.3
 
+- Added `InAppWebViewSettings.loadWhenHidden`: the deferred JS bridge registrations and initial load run on the main looper instead of `View.post`, so a WebView that is never attached to a window still loads
 - Updated flutter_inappwebview_platform_interface version to ^1.4.0-beta.3
 - Updated native dependencies:
   - implementation from `'androidx.webkit:webkit:1.12.0'` to `'androidx.webkit:webkit:1.14.0'`

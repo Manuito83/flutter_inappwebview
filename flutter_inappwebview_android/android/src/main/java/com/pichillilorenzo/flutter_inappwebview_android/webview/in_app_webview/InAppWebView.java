@@ -281,7 +281,7 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
       // across kill-relaunch cycles. Debug builds were not affected.
       // See UserContentController.addPluginScript for the equivalent defer applied
       // to addDocumentStartJavaScript.
-      post(new Runnable() {
+      postDeferred(new Runnable() {
         @Override
         public void run() {
           if (javaScriptBridgeInterface != null) {
@@ -2004,6 +2004,15 @@ final public class InAppWebView extends InputAwareWebView implements InAppWebVie
       webMessageListener.dispose();
     }
     webMessageListeners.clear();
+  }
+
+  // Unattached views never run View.post
+  public void postDeferred(Runnable action) {
+    if (customSettings.loadWhenHidden) {
+      mainLooperHandler.post(action);
+    } else {
+      post(action);
+    }
   }
 
   @Override

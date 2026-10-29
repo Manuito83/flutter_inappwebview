@@ -1038,6 +1038,11 @@ because there isn't any way to make the website data store non-persistent for th
   )
   bool? offscreenPreRaster;
 
+  ///Runs the initial load and the JavaScript bridge setup without waiting for the view to be attached
+  ///to a window, so a WebView kept off screen still loads. The default value is `false`.
+  @SupportedPlatforms(platforms: [AndroidPlatform()])
+  bool? loadWhenHidden;
+
   ///Sets the sans-serif font family name. The default value is `"sans-serif"`.
   @SupportedPlatforms(
     platforms: [
@@ -3341,6 +3346,7 @@ as it can cause framerate drops on animations in Android 9 and lower (see [Hybri
     this.minimumLogicalFontSize = 8,
     this.needInitialFocus = true,
     this.offscreenPreRaster = false,
+    this.loadWhenHidden = false,
     this.sansSerifFontFamily = "sans-serif",
     this.serifFontFamily = "sans-serif",
     this.standardFontFamily = "sans-serif",

@@ -14,6 +14,7 @@ import androidx.webkit.WebViewFeature;
 import com.pichillilorenzo.flutter_inappwebview_android.Util;
 import com.pichillilorenzo.flutter_inappwebview_android.plugin_scripts_js.JavaScriptBridgeJS;
 import com.pichillilorenzo.flutter_inappwebview_android.plugin_scripts_js.PluginScriptsUtil;
+import com.pichillilorenzo.flutter_inappwebview_android.webview.in_app_webview.InAppWebView;
 
 import org.json.JSONObject;
 
@@ -317,7 +318,7 @@ public class UserContentController implements Disposable {
       // onWebViewCreated never fired on ~50% of release-build cold starts on real
       // Android devices, with the failure toggling deterministically across kill-
       // relaunch cycles. Debug builds were not affected.
-      webView.post(new Runnable() {
+      Runnable register = new Runnable() {
         @Override
         public void run() {
           // Only register once: a value-equal key already present would orphan its previous ScriptHandler
@@ -337,7 +338,12 @@ public class UserContentController implements Disposable {
             }
           }
         }
-      });
+      };
+      if (webView instanceof InAppWebView) {
+        ((InAppWebView) webView).postDeferred(register);
+      } else {
+        webView.post(register);
+      }
     }
     return this.pluginScripts.get(pluginScript.getInjectionTime()).add(pluginScript);
   }

@@ -131,7 +131,7 @@ public class FlutterWebView implements PlatformWebView {
       // synchronously here, races ahead of the deferred bridge registrations,
       // and pages cached or served fast enough can execute @document-start
       // scripts before window.flutter_inappwebview is defined.
-      webView.post(new Runnable() {
+      webView.postDeferred(new Runnable() {
         @Override
         public void run() {
           if (webView == null) {
