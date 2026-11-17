@@ -64,6 +64,14 @@ public class InAppWebViewFlutterPlugin: NSObject, FlutterPlugin {
         if #available(iOS 17.0, *) {
             proxyManager = ProxyManager(plugin: self)
         }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(onEngineStopping),
+                                               name: UIApplication.willTerminateNotification, object: nil)
+    }
+    
+    // Flutter destroys the engine on terminate
+    @objc private func onEngineStopping() {
+        detachFromEngine(for: registrar)
     }
     
     public static func register(with registrar: FlutterPluginRegistrar) {
